@@ -8,11 +8,9 @@ public:
     DICOM();
     ~DICOM();
 
-    std::string file_name = "";
     std::vector<uint8_t> buffer;
 
-    void set_file_name(std::string file_name);
-    std::vector<uint8_t> load_file();
-    void read_header();
-    bool is_dicom();
+    std::vector<uint8_t> load_file(std::string file_name);
+    void read_header(std::string file_name);
+    bool is_dicom(std::string file_name);
 };

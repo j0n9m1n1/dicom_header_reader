@@ -7,18 +7,13 @@ DICOM::~DICOM()
 {
 }
 
-void DICOM::set_file_name(std::string file_name)
+bool DICOM::is_dicom(std::string file_name)
 {
-    this->file_name = file_name;
-}
-
-bool DICOM::is_dicom()
-{
-    std::ifstream file(this->file_name, std::ios::binary);
+    std::ifstream file(file_name, std::ios::binary);
 
     if (!file.is_open())
     {
-        std::cerr << "Error opening file: " << this->file_name << std::endl;
+        std::cerr << "Error opening file: " << file_name << std::endl;
         return false;
     }
     else
@@ -29,11 +24,18 @@ bool DICOM::is_dicom()
         file.close();
         // 128, 129, 130, 131
 
-        buffer;
-        return true;
+        if (buffer[128] == 0x44 && buffer[129] == 0x49 &&
+            buffer[130] == 0x43 && buffer[131] == 0x4D)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
 
-void DICOM::read_header()
+void DICOM::read_header(std::string file_name)
 {
 }

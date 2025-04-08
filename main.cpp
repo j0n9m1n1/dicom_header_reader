@@ -3,6 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdint>
+#include "DICOM.h"
 
 std::string find_dicom_tag(std::vector<uint8_t> &buffer, uint16_t group, uint16_t element, size_t &position)
 {
@@ -75,5 +76,8 @@ std::vector<uint8_t> load_file()
 }
 int main()
 {
+    DICOM dicom;
+    std::string file_name = "H:\\mwl_default.dcm";
+    std::cout << "is DICOM: " << dicom.is_dicom(file_name) << std::endl;
     std::vector<uint8_t> buffer = load_file();
 }
