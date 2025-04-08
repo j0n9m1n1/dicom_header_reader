@@ -13,5 +13,6 @@ public:
 
     void set_file_name(std::string file_name);
     std::vector<uint8_t> load_file();
+    void read_header();
     bool is_dicom();
 };
