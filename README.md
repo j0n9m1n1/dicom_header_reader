@@ -48,3 +48,5 @@ AE, AS, AT, CS, DA, DS, DT, FL, FD, IS, LO, LT, PN, SH, SL, SS, ST, TM, UI, UL, 
 
 4바이트 Length 필드를 사용하는 VR:
 OB, OW, OF, SQ, UT, UN
+
+비트연산 살짝 벽느낌
