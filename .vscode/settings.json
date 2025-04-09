@@ -1,4 +1,7 @@
 {
+    "code-runner.executorMap": {
+        "cpp": "cd $dir && g++ $fileName DICOM.cpp DicomTag.cpp -o $fileNameWithoutExt && $dir$fileNameWithoutExt"
+    },
     "files.associations": {
         "*.py": "python",
         "iosfwd": "cpp",
@@ -51,6 +54,8 @@
         "xloctime": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "xstddef": "cpp"
+        "xstddef": "cpp",
+        "map": "cpp",
+        "xtree": "cpp"
     }
 }

@@ -74,10 +74,12 @@ std::vector<uint8_t> load_file()
     }
     return buffer;
 }
+
 int main()
 {
-    DICOM dicom;
-    std::string file_name = "H:\\mwl_default.dcm";
-    std::cout << "is DICOM: " << dicom.is_dicom(file_name) << std::endl;
-    std::vector<uint8_t> buffer = load_file();
+    DICOM dcm;
+    std::string file_name = "D:\\48744_DX_I00010002.dcm";
+
+    std::cout << "is DICOM: " << dcm.is_dicom(file_name) << std::endl;
+    std::cout << "is exist tag: " << dcm.is_exist_tag(file_name, 0x0008, 0x0060) << std::endl;
 }

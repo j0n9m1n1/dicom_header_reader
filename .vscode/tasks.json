@@ -1,0 +1,75 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: MSVC 빌드",
+            "command": "cl.exe",
+            "args": [
+                "/Zi",
+                "/EHsc",
+                "/nologo",
+                "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "${file}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": "build",
+            "detail": "MSVC 컴파일러로 빌드"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: Clang 빌드",
+            "command": "clang++",
+            "args": [
+                "-g",
+                "-std=c++17",
+                "${fileDirname}/DICOM.cpp",
+                "${fileDirname}/DicomTag.cpp",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "Clang 컴파일러로 빌드"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: MSYS2 빌드",
+            "command": "g++",
+            "args": [
+                "-g",
+                "-std=c++17",
+                "${fileDirname}/DICOM.cpp",
+                "${fileDirname}/DicomTag.cpp",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}",
+                "shell": {
+                    "executable": "C:/msys64/usr/bin/bash.exe",
+                    "args": [
+                        "-c"
+                    ]
+                }
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": "build",
+            "detail": "MSYS2 환경에서 g++ 컴파일러로 빌드"
+        }
+    ],
+    "version": "2.0.0"
+}
