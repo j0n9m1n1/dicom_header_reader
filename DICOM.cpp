@@ -61,6 +61,16 @@ OB, OW, OF, SQ, UT, UN
 */
 uint16_t DICOM::read_group(std::vector<uint8_t> &buffer, size_t offset)
 {
+    int byte_order = 0; // 0: little endian, 1: big endian
+    if (byte_order == 0)
+    {
+        return buffer[offset + 1] & 0xff, buffer[offset] >> 8;
+    }
+    else if (byte_order == 1)
+    {
+        return buffer[offset] & 0xff, buffer[offset + 1] >> 8;
+    }
+    return buffer[offset]
 }
 uint16_t DICOM::read_element(std::vector<uint8_t> &buffer, size_t offset)
 {
@@ -79,9 +89,9 @@ uint32_t DICOM::read_length(std::vector<uint8_t> &buffer, size_t offset, std::st
 
 void DICOM::read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element)
 {
-    read_group(buffer, offset);
+    uint16_t read_group(buffer, offset);
     read_element(buffer, offset);
-    read_vr(buffer, offset);
+    std::string vr = read_vr(buffer, offset);
     read_length(buffer, offset, vr);
 }
 
