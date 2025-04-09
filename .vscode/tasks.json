@@ -2,26 +2,6 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: MSVC 빌드",
-            "command": "cl.exe",
-            "args": [
-                "/Zi",
-                "/EHsc",
-                "/nologo",
-                "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
-                "${file}"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$msCompile"
-            ],
-            "group": "build",
-            "detail": "MSVC 컴파일러로 빌드"
-        },
-        {
-            "type": "cppbuild",
             "label": "C/C++: Clang 빌드",
             "command": "clang++",
             "args": [
@@ -69,6 +49,29 @@
             ],
             "group": "build",
             "detail": "MSYS2 환경에서 g++ 컴파일러로 빌드"
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: cl.exe 활성 파일 빌드",
+            "command": "cl.exe",
+            "args": [
+                "/Zi",
+                "/EHsc",
+                "/nologo",
+                "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
+                "${file}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$msCompile"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "디버거에서 생성된 작업입니다."
         }
     ],
     "version": "2.0.0"

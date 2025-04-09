@@ -1,2 +1,2 @@
-0x0060) << std::endl;
-}
+
+#include <cstdint>

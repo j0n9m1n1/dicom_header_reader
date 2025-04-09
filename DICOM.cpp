@@ -147,10 +147,11 @@ uint32_t DICOM::read_length(std::vector<uint8_t> &buffer, size_t offset, std::st
 
 void DICOM::read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element)
 {
-    uint16_t a = read_group(buffer, offset);
-    uint16_t b = read_element(buffer, offset);
+    uint16_t req_group = read_group(buffer, offset);
+    uint16_t req_element = read_element(buffer, offset);
     std::string vr = read_vr(buffer, offset);
-    uint32_t c = read_length(buffer, offset, vr);
+    uint32_t length = read_length(buffer, offset, vr);
+    read_value(buffer, offset, vr, length);
 }
 
 bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element)
