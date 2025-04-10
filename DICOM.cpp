@@ -1,7 +1,22 @@
 #include "DICOM.h"
+// struct TagInfo
+// {
+//     uint16_t group;
+//     uint16_t element;
+//     std::string vr;
+//     uint32_t length;
+//     size_t value_offset;
+//     const uint8_t *data_ptr;
+// };
 
 DICOM::DICOM()
 {
+    tag_dictionary["PatientName"] = {0x0010, 0x0010, "PatientName", "PN"};
+
+    for (const auto &entry : tag_dictionary)
+    {
+        tag_lookup[{entry.second.group, entry.second.element}] = entry.first;
+    }
 }
 DICOM::~DICOM()
 {
@@ -69,6 +84,7 @@ uint16_t DICOM::read_group(std::vector<uint8_t> &buffer, size_t offset)
     {
         return (buffer[offset] << 8) | buffer[offset + 1];
     }
+    return 0;
 }
 uint16_t DICOM::read_element(std::vector<uint8_t> &buffer, size_t offset)
 {
@@ -81,6 +97,7 @@ uint16_t DICOM::read_element(std::vector<uint8_t> &buffer, size_t offset)
     {
         return (buffer[offset + 2] << 8) | buffer[offset + 3];
     }
+    return 0;
 }
 
 std::string DICOM::read_vr(std::vector<uint8_t> &buffer, size_t offset)
@@ -143,15 +160,73 @@ uint32_t DICOM::read_length(std::vector<uint8_t> &buffer, size_t offset, std::st
                    buffer[offset + 7];
         }
     }
+    return 0;
 }
 
-void DICOM::read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element)
+size_t DICOM::get_value_offset(size_t tag_offset, const std::string &vr)
 {
-    uint16_t req_group = read_group(buffer, offset);
-    uint16_t req_element = read_element(buffer, offset);
-    std::string vr = read_vr(buffer, offset);
-    uint32_t length = read_length(buffer, offset, vr);
-    read_value(buffer, offset, vr, length);
+    if (vr == "OB" || vr == "OW" || vr == "SQ" || vr == "UN" || vr == "UT" || vr == "OF")
+    {
+        return tag_offset + 12; // 그룹(2) + 엘리먼트(2) + VR(2) + 예약(2) + 길이(4)
+    }
+    // 2바이트 길이 필드를 가진 VR (다른 모든 VR)
+    else
+    {
+        return tag_offset + 8; // 그룹(2) + 엘리먼트(2) + VR(2) + 길이(2)
+    }
+}
+
+DicomValue DICOM::get_value(const TagInfo &taginfo)
+{
+    if (taginfo.vr == "US")
+    {
+        return *static_cast<const uint16_t *>(taginfo.data);
+    }
+    else if (taginfo.vr == "SS")
+    {
+        return *static_cast<const int16_t *>(taginfo.data);
+    }
+    else if (taginfo.vr == "UL")
+    {
+        return *static_cast<const uint32_t *>(taginfo.data);
+    }
+    else if (taginfo.vr == "SL")
+    {
+        return *static_cast<const int32_t *>(taginfo.data);
+    }
+    else if (taginfo.vr == "FL")
+    {
+        return *static_cast<const float *>(taginfo.data);
+    }
+    else if (taginfo.vr == "FD")
+    {
+        return *static_cast<const double *>(taginfo.data);
+    }
+    else if (taginfo.vr == "ST" || taginfo.vr == "LT" || taginfo.vr == "UT")
+    {
+        return std::string(static_cast<const char *>(taginfo.data));
+    }
+    return DicomValue{}; // 기본값 (에러 처리 필요 시 예외 던지기 가능)
+}
+// void DICOM::get_value(TagInfo &tag)
+// {
+//     if (tag.vr == "" ||)
+//     {
+//     }
+// }
+
+TagInfo DICOM::read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element)
+{
+    TagInfo tag;
+
+    tag.group = read_group(buffer, offset);
+    tag.element = read_element(buffer, offset);
+    tag.vr = read_vr(buffer, offset);
+    tag.length = read_length(buffer, offset, tag.vr);
+    tag.value_offset = get_value_offset(offset, tag.vr);
+    tag.data_ptr = &buffer[tag.value_offset];
+
+    return tag;
 }
 
 bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element)
@@ -165,36 +240,39 @@ bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element
     else
     {
         // 0x0002, 0x0010 Trasfer Syntax UID
-        for (int i = 0; i < buffer.size(); i++)
-        {
-            read_tag(buffer, i, 0x0002, 0x0010);
+        int offset = 0;
 
-            if (buffer[i] == 0x02 && buffer[i + 1] == 0x00 &&
-                buffer[i + 2] == 0x10 && buffer[i + 3] == 0x00)
+        while (offset < buffer.size())
+        {
+            TagInfo tag = read_tag(buffer, offset, 0x0002, 0x0010);
+            if (tag.group == group && tag.element == element)
             {
                 std::cout << "Transfer Syntax UID" << std::endl;
-
-                // char vr[3] = {0};
-                // vr[0] = buffer[i + 5];
-                // vr[1] = buffer[i + 4];
-                std::string vr(reinterpret_cast<char *>(&buffer[i + 4]), 2);
-                std::cout << "VR: " << vr << std::endl;
-                // // length
-                // buffer[i + 7];
-                // buffer[i + 6];
-                [""] std::string legnth(reinterpret_cast<char *>(&buffer[i + 4]), 2);
-            }
-        }
-        // preamble을 찾았으면 132부터~-4
-        for (int i = 0; i < buffer.size(); i++)
-        {
-            // 0x1234 >> 8 = 0x0012, 0x1234 & 0xFF = 0x0034
-            if (buffer[i] == (group >> 8) && buffer[i + 1] == (group & 0xFF) &&
-                buffer[i + 2] == (element >> 8) && buffer[i + 3] == (element & 0xFF))
-            {
                 return true;
             }
+            offset += tag.value_offset + tag.length;
         }
+        // for (int i = 0; i < buffer.size(); i++)
+        // {
+
+        // get_value(tag);
+
+        // if (buffer[i] == 0x02 && buffer[i + 1] == 0x00 &&
+        //     buffer[i + 2] == 0x10 && buffer[i + 3] == 0x00)
+        // {
+        //     std::cout << "Transfer Syntax UID" << std::endl;
+        // }
+        // }
+        // preamble을 찾았으면 132부터~-4
+        // for (int i = 0; i < buffer.size(); i++)
+        // {
+        //     // 0x1234 >> 8 = 0x0012, 0x1234 & 0xFF = 0x0034
+        //     if (buffer[i] == (group >> 8) && buffer[i + 1] == (group & 0xFF) &&
+        //         buffer[i + 2] == (element >> 8) && buffer[i + 3] == (element & 0xFF))
+        //     {
+        //         return true;
+        //     }
+        // }
     }
     return false;
 }

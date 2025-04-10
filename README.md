@@ -50,3 +50,8 @@ AE, AS, AT, CS, DA, DS, DT, FL, FD, IS, LO, LT, PN, SH, SL, SS, ST, TM, UI, UL, 
 OB, OW, OF, SQ, UT, UN
 
 비트연산 살짝 벽느낌
+
+vr마다 length도 달라지고, value의 data type도 바뀜
+
+metadata는 전부 가져와서 저장시켜놓는게
+TagInfo에 넣고, 그걸 tag_map에 넣어가야함.
