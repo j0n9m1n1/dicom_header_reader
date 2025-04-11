@@ -57,6 +57,11 @@
         "xstddef": "cpp",
         "map": "cpp",
         "xtree": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "variant": "cpp",
+        "algorithm": "cpp",
+        "iomanip": "cpp",
+        "optional": "cpp",
+        "sstream": "cpp"
     }
 }

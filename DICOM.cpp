@@ -1,4 +1,5 @@
 #include "DICOM.h"
+
 // struct TagInfo
 // {
 //     uint16_t group;
@@ -176,44 +177,67 @@ size_t DICOM::get_value_offset(size_t tag_offset, const std::string &vr)
     }
 }
 
-DicomValue DICOM::get_value(const TagInfo &taginfo)
+DICOMValue DICOM::get_value(const TagInfo &taginfo)
 {
     if (taginfo.vr == "US")
     {
-        return *static_cast<const uint16_t *>(taginfo.data);
+        uint16_t value = taginfo.data_ptr[0] | (taginfo.data_ptr[1] << 8);
+        return value;
     }
     else if (taginfo.vr == "SS")
     {
-        return *static_cast<const int16_t *>(taginfo.data);
+        uint16_t value = static_cast<int16_t>(taginfo.data_ptr[0] | (taginfo.data_ptr[1] << 8));
+        return value;
     }
     else if (taginfo.vr == "UL")
     {
-        return *static_cast<const uint32_t *>(taginfo.data);
+        uint32_t value = taginfo.data_ptr[0] |
+                         (taginfo.data_ptr[1] << 8) |
+                         (taginfo.data_ptr[2] << 16) |
+                         (taginfo.data_ptr[3] << 24);
+        return value;
     }
     else if (taginfo.vr == "SL")
     {
-        return *static_cast<const int32_t *>(taginfo.data);
+        int32_t value = static_cast<int32_t>(taginfo.data_ptr[0] |
+                                             (taginfo.data_ptr[1] << 8) |
+                                             (taginfo.data_ptr[2] << 16) |
+                                             (taginfo.data_ptr[3] << 24));
+        return value;
     }
     else if (taginfo.vr == "FL")
     {
-        return *static_cast<const float *>(taginfo.data);
+        float value;
+        std::memcpy(&value, taginfo.data_ptr, sizeof(float));
+        return value;
     }
     else if (taginfo.vr == "FD")
     {
-        return *static_cast<const double *>(taginfo.data);
+        double value;
+        std::memcpy(&value, taginfo.data_ptr, sizeof(double));
+        return value;
     }
-    else if (taginfo.vr == "ST" || taginfo.vr == "LT" || taginfo.vr == "UT")
+    else if (taginfo.vr == "ST" || taginfo.vr == "LT" || taginfo.vr == "UT" ||
+             taginfo.vr == "PN" || taginfo.vr == "LO" || taginfo.vr == "CS" ||
+             taginfo.vr == "UI" || taginfo.vr == "DA" || taginfo.vr == "TM")
     {
-        return std::string(static_cast<const char *>(taginfo.data));
+        return std::string(reinterpret_cast<const char *>(taginfo.data_ptr), taginfo.length);
     }
-    return DicomValue{}; // 기본값 (에러 처리 필요 시 예외 던지기 가능)
+    else if (taginfo.vr == "AT")
+    {
+        uint16_t group = taginfo.data_ptr[0] | (taginfo.data_ptr[1] << 8);
+        uint16_t element = taginfo.data_ptr[2] | (taginfo.data_ptr[3] << 8);
+        // 이거 return을 뭘로 할 지 생각좀 해봐야 할 듯
+        return std::string(std::to_string(group) + ", " + std::to_string(element));
+    }
+    else if (taginfo.vr == "OB" || taginfo.vr == "OW" || taginfo.vr == "OF" || taginfo.vr == "UN")
+    {
+        // 바이너리 데이터는 길이 정보와 함께 저장
+        std::vector<uint8_t> value(taginfo.data_ptr, taginfo.data_ptr + taginfo.length);
+        return value;
+    }
+    return DICOMValue{}; // 기본값 (에러 처리 필요 시 예외 던지기 가능)
 }
-// void DICOM::get_value(TagInfo &tag)
-// {
-//     if (tag.vr == "" ||)
-//     {
-//     }
-// }
 
 TagInfo DICOM::read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element)
 {
@@ -245,12 +269,17 @@ bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element
         while (offset < buffer.size())
         {
             TagInfo tag = read_tag(buffer, offset, 0x0002, 0x0010);
+
             if (tag.group == group && tag.element == element)
             {
                 std::cout << "Transfer Syntax UID" << std::endl;
+                DICOMValue value = get_value(tag);
                 return true;
             }
-            offset += tag.value_offset + tag.length;
+            offset += tag.value_offset - offset + tag.length;
+
+            if (offset >= buffer.size())
+                break;
         }
         // for (int i = 0; i < buffer.size(); i++)
         // {
