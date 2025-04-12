@@ -12,15 +12,108 @@
 
 DICOM::DICOM()
 {
+    init();
+    init2();
+}
+DICOM::~DICOM()
+{
+}
+
+// https://www.dicomlibrary.com/dicom/dicom-tags/
+void DICOM::init()
+{
+    tag_dictionary["FileMetaInformationGroupLength"] = {0x0002, 0x0000, "FileMetaInformationGroupLength", "UL"};
+    tag_dictionary["FileMetaInformationVersion"] = {0x0002, 0x0001, "FileMetaInformationVersion", "OB"};
+    tag_dictionary["MediaStorageSOPClassUID"] = {0x0002, 0x0002, "MediaStorageSOPClassUID", "UI"};
+    tag_dictionary["MediaStorageSOPInstanceUID"] = {0x0002, 0x0003, "MediaStorageSOPInstanceUID", "UI"};
+    tag_dictionary["TransferSyntaxUID"] = {0x0002, 0x0010, "TransferSyntaxUID", "UI"};
+    tag_dictionary["ImplementationClassUID"] = {0x0002, 0x0012, "ImplementationClassUID", "UI"};
+    tag_dictionary["ImplementationVersionName"] = {0x0002, 0x0013, "ImplementationVersionName", "SH"};
+    tag_dictionary["SourceApplicationEntityTitle"] = {0x0002, 0x0016, "SourceApplicationEntityTitle", "AE"};
+    tag_dictionary["SendingApplicationEntityTitle"] = {0x0002, 0x0017, "SendingApplicationEntityTitle", "AE"};
+    tag_dictionary["ReceivingApplicationEntityTitle"] = {0x0002, 0x0018, "ReceivingApplicationEntityTitle", "AE"};
+    tag_dictionary["PrivateInformationCreatorUID"] = {0x0002, 0x0100, "PrivateInformationCreatorUID", "UI"};
+    tag_dictionary["PrivateInformation"] = {0x0002, 0x0102, "PrivateInformation", "OB"};
+
+    tag_dictionary["StudyDate"] = {0x0008, 0x0020, "StudyDate", "DA"};
+    tag_dictionary["StudyTime"] = {0x0008, 0x0030, "StudyTime", "TM"};
+    tag_dictionary["Modality"] = {0x0008, 0x0060, "Modality", "CS"};
+    tag_dictionary["SOPClassUID"] = {0x0008, 0x0016, "SOPClassUID", "UI"};
+    tag_dictionary["SOPInstanceUID"] = {0x0008, 0x0018, "SOPInstanceUID", "UI"};
+
     tag_dictionary["PatientName"] = {0x0010, 0x0010, "PatientName", "PN"};
+    tag_dictionary["PatientID"] = {0x0010, 0x0020, "PatientID", "LO"};
+    tag_dictionary["PatientBirthDate"] = {0x0010, 0x0030, "PatientBirthDate", "DA"};
+    tag_dictionary["PatientSex"] = {0x0010, 0x0040, "PatientSex", "CS"};
+    tag_dictionary["StudyInstanceUID"] = {0x0020, 0x000D, "StudyInstanceUID", "UI"};
+    tag_dictionary["SeriesInstanceUID"] = {0x0020, 0x000E, "SeriesInstanceUID", "UI"};
+
+    tag_dictionary["Rows"] = {0x0028, 0x0010, "Rows", "US"};
+    tag_dictionary["Columns"] = {0x0028, 0x0011, "Columns", "US"};
+    tag_dictionary["BitsAllocated"] = {0x0028, 0x0100, "BitsAllocated", "US"};
+    tag_dictionary["BitsStored"] = {0x0028, 0x0101, "BitsStored", "US"};
+    tag_dictionary["HighBit"] = {0x0028, 0x0102, "HighBit", "US"};
+    tag_dictionary["PixelRepresentation"] = {0x0028, 0x0103, "PixelRepresentation", "US"};
+
+    tag_dictionary["PixelData"] = {0x7FE0, 0x0010, "PixelData", "OW"};
 
     for (const auto &entry : tag_dictionary)
     {
         tag_lookup[{entry.second.group, entry.second.element}] = entry.first;
     }
 }
-DICOM::~DICOM()
+
+// https://www.dicomlibrary.com/dicom/transfer-syntax/
+/*
+    std::string name;
+    bool is_explicit_vr;
+    bool is_little_endian;
+    bool is_compressed;
+    std::string compression_type;
+*/
+void DICOM::init2()
 {
+    transfer_syntax_dictionary["1.2.840.10008.1.2"] = {"Implicit VR Endian", false, true, false, ""};
+    transfer_syntax_dictionary["1.2.840.10008.1.2.1"] = {"Explicit VR Little Endian", true, true, false, ""};
+    transfer_syntax_dictionary["1.2.840.10008.1.2.2"] = {"Explicit VR Big Endian", true, false, false, ""};
+    transfer_syntax_dictionary["1.2.840.10008.1.2.1.99"] = {"Deflated Explicit VR Little Endian", true, true, false, ""};
+
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.50"] = {"JPEG Baseline (Process 1)", true, true, true, "JPEG"};
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.51"] = {"JPEG Baseline (Process 2 & 4))", true, true, true, "JPEG"};
+    // 1.2.840.10008.1.2.4.52	JPEG Extended (Processes 3 & 5)	Retired
+    // 1.2.840.10008.1.2.4.53	JPEG Spectral Selection, Nonhierarchical (Processes 6 & 8)	Retired
+    // 1.2.840.10008.1.2.4.54	JPEG Spectral Selection, Nonhierarchical (Processes 7 & 9)	Retired
+    // 1.2.840.10008.1.2.4.55	JPEG Full Progression, Nonhierarchical (Processes 10 & 12)	Retired
+    // 1.2.840.10008.1.2.4.56	JPEG Full Progression, Nonhierarchical (Processes 11 & 13)	Retired
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.57"] = {"JPEG Lossless, Nonhierarchical (Processes 14)", true, true, true, "JPEG Loseless"};
+    // 1.2.840.10008.1.2.4.58	JPEG Lossless, Nonhierarchical (Processes 15)	Retired
+    // 1.2.840.10008.1.2.4.59	JPEG Extended, Hierarchical (Processes 16 & 18)	Retired
+    // 1.2.840.10008.1.2.4.60	JPEG Extended, Hierarchical (Processes 17 & 19)	Retired
+    // 1.2.840.10008.1.2.4.61	JPEG Spectral Selection, Hierarchical (Processes 20 & 22)	Retired
+    // 1.2.840.10008.1.2.4.62	JPEG Spectral Selection, Hierarchical (Processes 21 & 23)	Retired
+    // 1.2.840.10008.1.2.4.63	JPEG Full Progression, Hierarchical (Processes 24 & 26)	Retired
+    // 1.2.840.10008.1.2.4.64	JPEG Full Progression, Hierarchical (Processes 25 & 27)	Retired
+    // 1.2.840.10008.1.2.4.65	JPEG Lossless, Nonhierarchical (Process 28)	Retired
+    // 1.2.840.10008.1.2.4.66	JPEG Lossless, Nonhierarchical (Process 29)	Retired
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.70"] = {"JPEG Lossless, Nonhierarchical, First- Order Prediction", true, true, true, "JPEG Loseless"};
+
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.80"] = {"JPEG-LS Lossless", true, true, true, "JPEG-LS"};
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.81"] = {"JPEG-LS Lossy", true, true, true, "JPEG-LS"};
+
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.90"] = {"JPEG 2000 (Lossless Only)", true, true, true, "JPEG 2000"};
+    transfer_syntax_dictionary["1.2.840.10008.1.2.4.91"] = {"JPEG 2000", true, true, true, "JPEG 2000"};
+
+    transfer_syntax_dictionary["1.2.840.10008.1.2.5"] = {"RLE Lossless", true, true, true, "RLE"};
+}
+std::string DICOM::get_tag_name(uint16_t group, uint16_t element)
+{
+    std::string tag_name = "Unknown";
+    auto it = tag_lookup.find({group, element});
+    if (it != tag_lookup.end())
+    {
+        tag_name = it->second;
+    }
+    return tag_name;
 }
 
 std::vector<uint8_t> DICOM::load_file(std::string file_path)
@@ -87,6 +180,7 @@ uint16_t DICOM::read_group(std::vector<uint8_t> &buffer, size_t offset)
     }
     return 0;
 }
+
 uint16_t DICOM::read_element(std::vector<uint8_t> &buffer, size_t offset)
 {
     int byte_order = 0; // 0: little endian, 1: big endian
@@ -106,6 +200,7 @@ std::string DICOM::read_vr(std::vector<uint8_t> &buffer, size_t offset)
     std::string vr(reinterpret_cast<char *>(&buffer[offset + 4]), 2);
     return vr;
 }
+
 /*
 2바이트 Length 필드를 사용하는 VR:
 AE, AS, AT, CS, DA, DS, DT, FL, FD, IS, LO, LT, PN, SH, SL, SS, ST, TM, UI, UL, US
@@ -191,7 +286,7 @@ TagInfo DICOM::read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t gr
     return tag;
 }
 
-bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element)
+bool DICOM::find_tag(std::string file_path, uint16_t group, uint16_t element)
 {
     std::vector<uint8_t> buffer = load_file(file_path);
     if (buffer.size() == 0)
@@ -224,6 +319,49 @@ bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element
     }
     return false;
 }
+
+bool DICOM::find_tag(std::string file_path, std::string tag_name)
+{
+    std::vector<uint8_t> buffer = load_file(file_path);
+    if (buffer.size() == 0)
+    {
+        std::cerr << "Error loading file: " << file_path << std::endl;
+        return false;
+    }
+    else
+    {
+        // 0x0002, 0x0010 Trasfer Syntax UID
+        int offset = is_dicom(file_path) ? 132 : 0;
+
+        uint16_t group = tag_dictionary[tag_name].group;
+        uint16_t element = tag_dictionary[tag_name].element;
+
+        if (group == 0x0000 && element == 0x0000)
+        {
+            std::cerr << "Error: Invalid tag name" << std::endl;
+            return false;
+        }
+        while (offset < buffer.size())
+        {
+            TagInfo tag = read_tag(buffer, offset, 0x0002, 0x0010);
+
+            if (tag.group == group && tag.element == element)
+            {
+
+                // std::cout << "Transfer Syntax UID" << std::endl;
+                // DICOMValue value = get_value(tag);
+                // std::cout << "Value: " << value.to_string() << std::endl;
+                return true;
+            }
+            offset += tag.value_offset - offset + tag.length;
+
+            if (offset >= buffer.size())
+                break;
+        }
+    }
+    return false;
+}
+
 DICOMValue DICOM::get_value(TagInfo &tag)
 {
     if (tag.vr == "US")
@@ -285,6 +423,7 @@ DICOMValue DICOM::get_value(TagInfo &tag)
     }
     return DICOMValue{}; // 기본값 (에러 처리 필요 시 예외 던지기 가능)
 }
+
 DICOMValue DICOM::get_value(std::string &file_path, uint16_t group, uint16_t element)
 {
     std::vector<uint8_t> buffer = load_file(file_path);
@@ -296,6 +435,41 @@ DICOMValue DICOM::get_value(std::string &file_path, uint16_t group, uint16_t ele
     else
     {
         int offset = is_dicom(file_path) ? 132 : 0;
+        while (offset < buffer.size())
+        {
+            TagInfo tag = read_tag(buffer, offset, group, element);
+            if (tag.group == group && tag.element == element)
+            {
+                return get_value(tag);
+            }
+
+            offset += tag.value_offset - offset + tag.length;
+            if (offset >= buffer.size())
+                break;
+        }
+        return DICOMValue{}; // 에러 처리 필요
+    }
+}
+
+DICOMValue DICOM::get_value(std::string &file_path, std::string tag_name)
+{
+    std::vector<uint8_t> buffer = load_file(file_path);
+    if (buffer.size() == 0)
+    {
+        std::cerr << "Error loading file: " << file_path << std::endl;
+        return DICOMValue{}; // 에러 처리 필요
+    }
+    else
+    {
+        int offset = is_dicom(file_path) ? 132 : 0;
+
+        uint16_t group = tag_dictionary[tag_name].group;
+        uint16_t element = tag_dictionary[tag_name].element;
+        if (group == 0x0000 && element == 0x0000)
+        {
+            std::cerr << "Error: Invalid tag name" << std::endl;
+            return false;
+        }
         while (offset < buffer.size())
         {
             TagInfo tag = read_tag(buffer, offset, group, element);
@@ -327,7 +501,9 @@ void DICOM::print(std::string file_path)
             TagInfo tag = read_tag(buffer, offset, 0x0000, 0x0000);
             std::cout << "(0x" << std::hex << std::setw(4) << std::setfill('0') << tag.group
                       << ", 0x" << std::setw(4) << std::setfill('0') << tag.element << ") "
-                      << ": " << tag.vr << ", " << get_value(tag).to_string() << std::endl;
+                      << tag.vr << " "
+                      << get_tag_name(tag.group, tag.element) << " "
+                      << ": " << get_value(tag).to_string() << std::endl;
 
             offset += tag.value_offset - offset + tag.length;
             if (offset >= buffer.size())
