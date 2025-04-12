@@ -59,3 +59,4 @@ TagInfo에 넣고, 그걸 tag_map에 넣어가야함.
 dicom value를 추가했는데 이거 variant좀 봐야할 듯 좋아보이긴 하는데
 굳이 vr에 따라서 data type을 전부 다르게 return을 해야하는지도 고민임
 그냥 전부 string으로 주면
+vr에 따른 value 처리가 깔끔하지가 못함

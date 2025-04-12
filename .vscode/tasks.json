@@ -8,7 +8,8 @@
                 "-g",
                 "-std=c++17",
                 "${fileDirname}/DICOM.cpp",
-                "${fileDirname}/DicomTag.cpp",
+                "${fileDirname}/DICOMTag.cpp",
+                "${fileDirname}/DICOMValue.cpp",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
@@ -30,7 +31,8 @@
                 "-g",
                 "-std=c++17",
                 "${fileDirname}/DICOM.cpp",
-                "${fileDirname}/DicomTag.cpp",
+                "${fileDirname}/DICOMTag.cpp",
+                "${fileDirname}/DICOMValue.cpp",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}.exe"

@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 #include <cstring> // memcpy 사용을 위한 헤더
-
+#include <cstdint>
 // DICOM 값을 저장하기 위한 간단한 클래스
 class DICOMValue
 {

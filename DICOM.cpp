@@ -177,68 +177,6 @@ size_t DICOM::get_value_offset(size_t tag_offset, const std::string &vr)
     }
 }
 
-DICOMValue DICOM::get_value(const TagInfo &taginfo)
-{
-    if (taginfo.vr == "US")
-    {
-        uint16_t value = taginfo.data_ptr[0] | (taginfo.data_ptr[1] << 8);
-        return value;
-    }
-    else if (taginfo.vr == "SS")
-    {
-        uint16_t value = static_cast<int16_t>(taginfo.data_ptr[0] | (taginfo.data_ptr[1] << 8));
-        return value;
-    }
-    else if (taginfo.vr == "UL")
-    {
-        uint32_t value = taginfo.data_ptr[0] |
-                         (taginfo.data_ptr[1] << 8) |
-                         (taginfo.data_ptr[2] << 16) |
-                         (taginfo.data_ptr[3] << 24);
-        return value;
-    }
-    else if (taginfo.vr == "SL")
-    {
-        int32_t value = static_cast<int32_t>(taginfo.data_ptr[0] |
-                                             (taginfo.data_ptr[1] << 8) |
-                                             (taginfo.data_ptr[2] << 16) |
-                                             (taginfo.data_ptr[3] << 24));
-        return value;
-    }
-    else if (taginfo.vr == "FL")
-    {
-        float value;
-        std::memcpy(&value, taginfo.data_ptr, sizeof(float));
-        return value;
-    }
-    else if (taginfo.vr == "FD")
-    {
-        double value;
-        std::memcpy(&value, taginfo.data_ptr, sizeof(double));
-        return value;
-    }
-    else if (taginfo.vr == "ST" || taginfo.vr == "LT" || taginfo.vr == "UT" ||
-             taginfo.vr == "PN" || taginfo.vr == "LO" || taginfo.vr == "CS" ||
-             taginfo.vr == "UI" || taginfo.vr == "DA" || taginfo.vr == "TM")
-    {
-        return std::string(reinterpret_cast<const char *>(taginfo.data_ptr), taginfo.length);
-    }
-    else if (taginfo.vr == "AT")
-    {
-        uint16_t group = taginfo.data_ptr[0] | (taginfo.data_ptr[1] << 8);
-        uint16_t element = taginfo.data_ptr[2] | (taginfo.data_ptr[3] << 8);
-        // 이거 return을 뭘로 할 지 생각좀 해봐야 할 듯
-        return std::string(std::to_string(group) + ", " + std::to_string(element));
-    }
-    else if (taginfo.vr == "OB" || taginfo.vr == "OW" || taginfo.vr == "OF" || taginfo.vr == "UN")
-    {
-        // 바이너리 데이터는 길이 정보와 함께 저장
-        std::vector<uint8_t> value(taginfo.data_ptr, taginfo.data_ptr + taginfo.length);
-        return value;
-    }
-    return DICOMValue{}; // 기본값 (에러 처리 필요 시 예외 던지기 가능)
-}
-
 TagInfo DICOM::read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element)
 {
     TagInfo tag;
@@ -264,7 +202,7 @@ bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element
     else
     {
         // 0x0002, 0x0010 Trasfer Syntax UID
-        int offset = 0;
+        int offset = is_dicom(file_path) ? 132 : 0;
 
         while (offset < buffer.size())
         {
@@ -272,8 +210,10 @@ bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element
 
             if (tag.group == group && tag.element == element)
             {
-                std::cout << "Transfer Syntax UID" << std::endl;
-                DICOMValue value = get_value(tag);
+
+                // std::cout << "Transfer Syntax UID" << std::endl;
+                // DICOMValue value = get_value(tag);
+                // std::cout << "Value: " << value.to_string() << std::endl;
                 return true;
             }
             offset += tag.value_offset - offset + tag.length;
@@ -281,29 +221,120 @@ bool DICOM::is_exist_tag(std::string file_path, uint16_t group, uint16_t element
             if (offset >= buffer.size())
                 break;
         }
-        // for (int i = 0; i < buffer.size(); i++)
-        // {
-
-        // get_value(tag);
-
-        // if (buffer[i] == 0x02 && buffer[i + 1] == 0x00 &&
-        //     buffer[i + 2] == 0x10 && buffer[i + 3] == 0x00)
-        // {
-        //     std::cout << "Transfer Syntax UID" << std::endl;
-        // }
-        // }
-        // preamble을 찾았으면 132부터~-4
-        // for (int i = 0; i < buffer.size(); i++)
-        // {
-        //     // 0x1234 >> 8 = 0x0012, 0x1234 & 0xFF = 0x0034
-        //     if (buffer[i] == (group >> 8) && buffer[i + 1] == (group & 0xFF) &&
-        //         buffer[i + 2] == (element >> 8) && buffer[i + 3] == (element & 0xFF))
-        //     {
-        //         return true;
-        //     }
-        // }
     }
     return false;
+}
+DICOMValue DICOM::get_value(TagInfo &tag)
+{
+    if (tag.vr == "US")
+    {
+        uint16_t value = tag.data_ptr[0] | (tag.data_ptr[1] << 8);
+        return value;
+    }
+    else if (tag.vr == "SS")
+    {
+        uint16_t value = static_cast<int16_t>(tag.data_ptr[0] | (tag.data_ptr[1] << 8));
+        return value;
+    }
+    else if (tag.vr == "UL")
+    {
+        uint32_t value = tag.data_ptr[0] |
+                         (tag.data_ptr[1] << 8) |
+                         (tag.data_ptr[2] << 16) |
+                         (tag.data_ptr[3] << 24);
+        return value;
+    }
+    else if (tag.vr == "SL")
+    {
+        int32_t value = static_cast<int32_t>(tag.data_ptr[0] |
+                                             (tag.data_ptr[1] << 8) |
+                                             (tag.data_ptr[2] << 16) |
+                                             (tag.data_ptr[3] << 24));
+        return value;
+    }
+    else if (tag.vr == "FL")
+    {
+        float value;
+        std::memcpy(&value, tag.data_ptr, sizeof(float));
+        return value;
+    }
+    else if (tag.vr == "FD")
+    {
+        double value;
+        std::memcpy(&value, tag.data_ptr, sizeof(double));
+        return value;
+    }
+    else if (tag.vr == "ST" || tag.vr == "LT" || tag.vr == "UT" ||
+             tag.vr == "PN" || tag.vr == "LO" || tag.vr == "CS" ||
+             tag.vr == "UI" || tag.vr == "DA" || tag.vr == "TM")
+    {
+        return std::string(reinterpret_cast<const char *>(tag.data_ptr), tag.length);
+    }
+    else if (tag.vr == "AT")
+    {
+        uint16_t group = tag.data_ptr[0] | (tag.data_ptr[1] << 8);
+        uint16_t element = tag.data_ptr[2] | (tag.data_ptr[3] << 8);
+        // 이거 return을 뭘로 할 지 생각좀 해봐야 할 듯
+        return std::string(std::to_string(group) + ", " + std::to_string(element));
+    }
+    else if (tag.vr == "OB" || tag.vr == "OW" || tag.vr == "OF" || tag.vr == "UN")
+    {
+        // 바이너리 데이터는 길이 정보와 함께 저장
+        std::vector<uint8_t> value(tag.data_ptr, tag.data_ptr + tag.length);
+        return value;
+    }
+    return DICOMValue{}; // 기본값 (에러 처리 필요 시 예외 던지기 가능)
+}
+DICOMValue DICOM::get_value(std::string &file_path, uint16_t group, uint16_t element)
+{
+    std::vector<uint8_t> buffer = load_file(file_path);
+    if (buffer.size() == 0)
+    {
+        std::cerr << "Error loading file: " << file_path << std::endl;
+        return DICOMValue{}; // 에러 처리 필요
+    }
+    else
+    {
+        int offset = is_dicom(file_path) ? 132 : 0;
+        while (offset < buffer.size())
+        {
+            TagInfo tag = read_tag(buffer, offset, group, element);
+            if (tag.group == group && tag.element == element)
+            {
+                return get_value(tag);
+            }
+
+            offset += tag.value_offset - offset + tag.length;
+            if (offset >= buffer.size())
+                break;
+        }
+        return DICOMValue{}; // 에러 처리 필요
+    }
+}
+
+void DICOM::print(std::string file_path)
+{
+    std::vector<uint8_t> buffer = load_file(file_path);
+    if (buffer.size() == 0)
+    {
+        std::cerr << "Error loading file: " << file_path << std::endl;
+    }
+    else
+    {
+        int offset = is_dicom(file_path) ? 132 : 0;
+        while (offset < buffer.size())
+        {
+            TagInfo tag = read_tag(buffer, offset, 0x0000, 0x0000);
+            std::cout << "(0x" << std::hex << std::setw(4) << std::setfill('0') << tag.group
+                      << ", 0x" << std::setw(4) << std::setfill('0') << tag.element << ") "
+                      << ": " << tag.vr << ", " << get_value(tag).to_string() << std::endl;
+
+            offset += tag.value_offset - offset + tag.length;
+            if (offset >= buffer.size())
+                break;
+        }
+    }
+    std::cout << std::dec;
 }
 void DICOM::read_header(std::string file_path)
 {

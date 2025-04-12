@@ -1,3 +1,5 @@
+#include "DICOMValue.h"
+
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -10,7 +12,7 @@
 #include <string>
 #include <vector>
 #include <cstring> // memcpy 사용을 위한 헤더
-#include "DICOMValue.h"
+#include <iomanip>
 
 struct DicomTagDict
 {
@@ -52,15 +54,18 @@ public:
 
     std::vector<uint8_t> load_file(std::string file_path);
 
+    bool is_dicom(std::string file_name);
+    bool is_exist_tag(std::string file_name, uint16_t group, uint16_t element);
+    DICOMValue get_value(TagInfo &tag);
+    DICOMValue get_value(std::string &file_path, uint16_t group, uint16_t element);
+    void read_header(std::string file_name);
+    void print(std::string file_path);
+
+private:
+    TagInfo read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element);
     uint16_t read_group(std::vector<uint8_t> &buffer, size_t offset);
     uint16_t read_element(std::vector<uint8_t> &buffer, size_t offset);
     std::string read_vr(std::vector<uint8_t> &buffer, size_t offset);
     uint32_t read_length(std::vector<uint8_t> &buffer, size_t offset, std::string &vr);
     size_t get_value_offset(size_t tag_offset, const std::string &vr);
-    TagInfo read_tag(std::vector<uint8_t> &buffer, size_t offset, uint16_t group, uint16_t element);
-    DICOMValue get_value(const TagInfo &taginfo);
-    bool is_dicom(std::string file_name);
-    bool is_exist_tag(std::string file_name, uint16_t group, uint16_t element);
-
-    void read_header(std::string file_name);
 };
