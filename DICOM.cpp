@@ -105,6 +105,7 @@ void DICOM::init2()
 
     transfer_syntax_dictionary["1.2.840.10008.1.2.5"] = {"RLE Lossless", true, true, true, "RLE"};
 }
+
 std::string DICOM::get_tag_name(uint16_t group, uint16_t element)
 {
     std::string tag_name = "Unknown";
