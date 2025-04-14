@@ -1,6 +1,6 @@
 {
     "code-runner.executorMap": {
-        "cpp": "cd $dir && g++ $fileName DICOM.cpp DICOMTag.cpp DICOMValue.cpp -o $fileNameWithoutExt && $dir$fileNameWithoutExt"
+        "cpp": "cd $dir && g++ $fileName DICOM.cpp DICOMTag.cpp DICOMValue.cpp DICOMNetwork.cpp -o $fileNameWithoutExt && $dir$fileNameWithoutExt"
     },
     "files.associations": {
         "*.py": "python",

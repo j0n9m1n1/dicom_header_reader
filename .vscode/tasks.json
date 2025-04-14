@@ -10,6 +10,7 @@
                 "${fileDirname}/DICOM.cpp",
                 "${fileDirname}/DICOMTag.cpp",
                 "${fileDirname}/DICOMValue.cpp",
+                "${fileDirname}/DICOMNetwork.cpp",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}"
@@ -33,6 +34,7 @@
                 "${fileDirname}/DICOM.cpp",
                 "${fileDirname}/DICOMTag.cpp",
                 "${fileDirname}/DICOMValue.cpp",
+                "${fileDirname}/DICOMNetwork.cpp",
                 "${file}",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}.exe"
